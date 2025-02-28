@@ -1,0 +1,6 @@
+.gitpod.yml
+/iso
+boot.o
+kernel.bin
+kernel.o
+os.iso
