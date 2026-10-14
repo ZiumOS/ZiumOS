@@ -1,29 +1,48 @@
-; Boot.asm - Entry point untuk bootloader
+; boot.asm - ZiumOS Multiboot1 boot
 
 [BITS 32]
 global start
-global kernel_early
+global mb_info_ptr
+global mb_magic_val
 
-extern kernel_entry  ; Fungsi dalam kernel.cpp
+extern kernel_main
+extern __bss_start
+extern __bss_end
 
 section .text
-    ; Multiboot header untuk GRUB
     align 4
-    dd 0x1BADB002               ; Magic number
-    dd 0x00                     ; Flags
-    dd - (0x1BADB002 + 0x00)    ; Checksum
+mb_header:
+    ; Multiboot1 header (magic 0x1BADB002, flags=0, checksum makes sum=0)
+    dd 0x1BADB002
+    dd 0x00
+    dd -(0x1BADB002 + 0x00)
 
 start:
-    cli                         ; Matikan interrupt
-    mov esp, stack_space        ; Set stack pointer
-    call kernel_entry           ; Panggil kernel
-    hlt                         ; Halt CPU
+    mov [mb_magic_val], eax
+    mov [mb_info_ptr], ebx
+    cli
+    mov esp, stack_top
 
-kernel_early:
-    ; Setup awal hardware
-    ; Misalnya setup GDT, IDT, dsb.
-    ret
+    ; Zero .bss
+    mov esi, __bss_start
+    mov edi, __bss_end
+    cmp esi, edi
+    jae call_kernel
+.zero:
+    mov dword [esi], 0
+    add esi, 4
+    cmp esi, edi
+    jb .zero
+
+call_kernel:
+    call kernel_main
+    hlt
+.hang:
+    jmp .hang
 
 section .bss
-    resb 8192                   ; 8KB untuk stack
-    stack_space:
+align 8
+    mb_magic_val: resd 1
+    mb_info_ptr:  resd 1
+    stack_space:  resb 8192
+    stack_top:

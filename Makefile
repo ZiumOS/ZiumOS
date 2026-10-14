@@ -4,12 +4,12 @@ AS = nasm
 LD = ld
 
 # Flags kompilasi
-CXXFLAGS = -m32 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -nostdlib -ffreestanding -O2 -Wall -Wextra
+CXXFLAGS = -m32 -fno-use-cxa-atexit -fno-rtti -fno-exceptions -nostdlib -ffreestanding -fno-stack-protector -O2 -Wall -Wextra
 ASFLAGS = -f elf32
 LDFLAGS = -m elf_i386 -T linker.ld
 
 # Objek files
-OBJS = boot.o kernel.o
+OBJS = boot.o isr.o kernel.o
 
 # Default target
 all: os.iso
@@ -35,6 +35,6 @@ os.iso: kernel.bin
 
 # Bersihkan file sementara
 clean:
-	rm -rf *.o kernel.bin iso os.iso
+	rm -rf *.o drivers/*.o kernel.bin iso os.iso
 
 .PHONY: all clean
